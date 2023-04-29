@@ -1,222 +1,203 @@
-const displacementSlider = function (opts) {
+/*
 
-  let vertex = `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        }
-    `;
+Inspired by the work of the guys at Tubik Studio.
+Dribble: https://dribbble.com/Tubik.
+https://dribbble.com/shots/2710181-Tubik-Studio-Ice.
 
-  let fragment = `
-        
-        varying vec2 vUv;
+*/
 
-        uniform sampler2D currentImage;
-        uniform sampler2D nextImage;
+var initialSlide = $('.slides-container [data-order="1"]');
+var initalSelected = $('.slide-navigation__txt [data-order="1"]');
+var mq_medium = window.matchMedia("(min-width: 860px)");
+var mq_big = window.matchMedia("(min-width: 1200px)");
 
-        uniform float dispFactor;
+function activate_slide(order) {
+  var unactiveSlide = $(".slide.active");
+  var activeSlide = $('.slides-container [data-order="' + order + '"]');
 
-        void main() {
+  if (!activeSlide.hasClass("active")) {
+    slide_in(activeSlide);
+    slide_out(unactiveSlide);
+  }
+}
 
-            vec2 uv = vUv;
-            vec4 _currentImage;
-            vec4 _nextImage;
-            float intensity = 0.3;
+function slide_in(slide) {
+  var _this = slide;
 
-            vec4 orig1 = texture2D(currentImage, uv);
-            vec4 orig2 = texture2D(nextImage, uv);
-            
-            _currentImage = texture2D(currentImage, vec2(uv.x, uv.y + dispFactor * (orig2 * intensity)));
+  animation_in(slide);
+  _this.addClass("active");
+  TweenMax.to(_this, 1, { autoAlpha: 1 }, "-=1");
+}
 
-            _nextImage = texture2D(nextImage, vec2(uv.x, uv.y + (1.0 - dispFactor) * (orig1 * intensity)));
+function slide_out(slide) {
+  var _this = slide;
 
-            vec4 finalTexture = mix(_currentImage, _nextImage, dispFactor);
+  _this.css("z-index", "2");
+  _this.removeClass("active");
+  TweenMax.to(_this, 1, { autoAlpha: 0, onComplete: removeZ });
 
-            gl_FragColor = finalTexture;
-
-        }
-    `;
-
-  let images = opts.images,image,sliderImages = [];;
-  let canvasWidth = images[0].clientWidth;
-  let canvasHeight = images[0].clientHeight;
-  let parent = opts.parent;
-  let renderWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-  let renderHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-
-  let renderW, renderH;
-
-  if (renderWidth > canvasWidth) {
-    renderW = renderWidth;
-  } else {
-    renderW = canvasWidth;
+  function removeZ() {
+    _this.css("z-index", "1");
   }
 
-  renderH = canvasHeight;
+  animation_out(slide);
+}
 
-  let renderer = new THREE.WebGLRenderer({
-    antialias: false });
+function animation_in(slide) {
+  var title = slide.find("h1");
+  var subtitle = $(slide).find("h2");
+  var text = $(slide).find("p");
+  var button = $(slide).find("button");
+  var image = $(slide).find("img");
 
+  TweenMax.fromTo(
+    title,
+    0.6,
+    { autoAlpha: 0, x: 100 },
+    { autoAlpha: 1, x: 0, ease: Power2.easeOut }
+  );
+  TweenMax.fromTo(
+    subtitle,
+    0.5,
+    { autoAlpha: 0, x: -200 },
+    { autoAlpha: 1, x: 0, ease: Power2.easeOut },
+    "-0.1"
+  );
+  TweenMax.fromTo(
+    text,
+    0.8,
+    { autoAlpha: 0, x: 50 },
+    { autoAlpha: 1, x: 0, ease: Power2.easeOut }
+  );
+  TweenMax.fromTo(button, 0.5, { autoAlpha: 0 }, { autoAlpha: 1 });
+  TweenMax.to(image, 0, { autoAlpha: 1, scale: 1 });
+}
 
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setClearColor(0x23272A, 1.0);
-  renderer.setSize(renderW, renderH);
-  parent.appendChild(renderer.domElement);
+function animation_out(slide) {
+  var title = slide.find("h1");
+  var subtitle = $(slide).find("h2");
+  var text = $(slide).find("p");
+  var button = $(slide).find("button");
+  var image = $(slide).find("img");
 
-  let loader = new THREE.TextureLoader();
-  loader.crossOrigin = "anonymous";
+  TweenMax.to(title, 0.6, { autoAlpha: 0, x: 0 });
+  TweenMax.to(subtitle, 0.5, { autoAlpha: 0, x: 200 });
+  TweenMax.to(text, 0.5, { autoAlpha: 0 });
+  TweenMax.to(button, 0.5, { autoAlpha: 0 });
+  TweenMax.to(image, 1, { scale: 1.1 });
+}
 
-  images.forEach(img => {
+$(".slide-navigation__txt span").on("click", function () {
+  var _this = $(this);
+  var order = _this.data("order");
+  var spans = $(".slide-navigation__txt span");
+  var current = $(".active").data("order");
 
-    image = loader.load(img.getAttribute('src') + '?v=' + Date.now());
-    image.magFilter = image.minFilter = THREE.LinearFilter;
-    image.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    sliderImages.push(image);
-
-  });
-
-  let scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x23272A);
-  let camera = new THREE.OrthographicCamera(
-  renderWidth / -2,
-  renderWidth / 2,
-  renderHeight / 2,
-  renderHeight / -2,
-  1,
-  1000);
-
-
-  camera.position.z = 1;
-
-  let mat = new THREE.ShaderMaterial({
-    uniforms: {
-      dispFactor: { type: "f", value: 0.0 },
-      currentImage: { type: "t", value: sliderImages[0] },
-      nextImage: { type: "t", value: sliderImages[1] } },
-
-    vertexShader: vertex,
-    fragmentShader: fragment,
-    transparent: true,
-    opacity: 1.0 });
-
-
-  let geometry = new THREE.PlaneBufferGeometry(
-  parent.offsetWidth,
-  parent.offsetHeight,
-  1);
-
-  let object = new THREE.Mesh(geometry, mat);
-  object.position.set(0, 0, 0);
-  scene.add(object);
-
-  let addEvents = function () {
-
-    let pagButtons = Array.from(document.getElementById('pagination').querySelectorAll('button'));
-    let isAnimating = false;
-
-    pagButtons.forEach(el => {
-
-      el.addEventListener('click', function () {
-
-        if (!isAnimating) {
-
-          isAnimating = true;
-
-          document.getElementById('pagination').querySelectorAll('.active')[0].className = '';
-          this.className = 'active';
-
-          let slideId = parseInt(this.dataset.slide, 10);
-
-          mat.uniforms.nextImage.value = sliderImages[slideId];
-          mat.uniforms.nextImage.needsUpdate = true;
-
-          TweenLite.to(mat.uniforms.dispFactor, 1, {
-            value: 1,
-            ease: 'Expo.easeInOut',
-            onComplete: function () {
-              mat.uniforms.currentImage.value = sliderImages[slideId];
-              mat.uniforms.currentImage.needsUpdate = true;
-              mat.uniforms.dispFactor.value = 0.0;
-              isAnimating = false;
-            } });
-
-
-          let slideTitleEl = document.getElementById('slide-title');
-          let slideStatusEl = document.getElementById('slide-status');
-          let nextSlideTitle = document.querySelectorAll(`[data-slide-title="${slideId}"]`)[0].innerHTML;
-          let nextSlideStatus = document.querySelectorAll(`[data-slide-status="${slideId}"]`)[0].innerHTML;
-
-          TweenLite.fromTo(slideTitleEl, 0.5,
-          {
-            autoAlpha: 1,
-            y: 0 },
-
-          {
-            autoAlpha: 0,
-            y: 20,
-            ease: 'Expo.easeIn',
-            onComplete: function () {
-              slideTitleEl.innerHTML = nextSlideTitle;
-
-              TweenLite.to(slideTitleEl, 0.5, {
-                autoAlpha: 1,
-                y: 0 });
-
-            } });
-
-
-          TweenLite.fromTo(slideStatusEl, 0.5,
-          {
-            autoAlpha: 1,
-            y: 0 },
-
-          {
-            autoAlpha: 0,
-            y: 20,
-            ease: 'Expo.easeIn',
-            onComplete: function () {
-              slideStatusEl.innerHTML = nextSlideStatus;
-
-              TweenLite.to(slideStatusEl, 0.5, {
-                autoAlpha: 1,
-                y: 0,
-                delay: 0.1 });
-
-            } });
-
-
-        }
-
-      });
-
-    });
-
-  };
-
-  addEvents();
-
-  window.addEventListener('resize', function (e) {
-    renderer.setSize(renderW, renderH);
-  });
-
-  let animate = function () {
-    requestAnimationFrame(animate);
-
-    renderer.render(scene, camera);
-  };
-  animate();
-};
-
-imagesLoaded(document.querySelectorAll('img'), () => {
-
-  document.body.classList.remove('loading');
-
-  const el = document.getElementById('slider');
-  const imgs = Array.from(el.querySelectorAll('img'));
-  new displacementSlider({
-    parent: el,
-    images: imgs });
-
-
+  spans.removeClass("active");
+  _this.addClass("active");
+  activate_slide(order);
+  stagger_squares(order, current);
 });
+
+function stagger_squares(order, current) {
+  var mq = 0.7;
+  var moveY;
+  var squares = $(".slide-navigation__squares .square");
+  var staggerTime = -0.12;
+
+  if (order < current) {
+    staggerTime = staggerTime * -1;
+  }
+
+  if (mq_medium.matches) {
+    mq = 1;
+  }
+  if (mq_big.matches) {
+    mq = 1.3;
+  }
+
+  moveY = (order - 1) * (15 * mq);
+  TweenMax.staggerTo(squares, 0.1, { y: moveY }, staggerTime);
+}
+
+$(document).ready(function () {
+  initialSlide.addClass("active");
+  initalSelected.addClass("active");
+  TweenMax.to(initialSlide, 0.5, { autoAlpha: 1 });
+});
+var currentSlide = 1;
+var slideCount = $(".slides-container [data-order]").length;
+var intervalId;
+
+function startSlider() {
+  intervalId = setInterval(function () {
+    currentSlide++;
+    if (currentSlide > slideCount) {
+      currentSlide = 1;
+    }
+    activate_slide(currentSlide);
+    stagger_squares(currentSlide, currentSlide - 1);
+  }, 3000); // Change this value to adjust the interval time in milliseconds
+}
+
+function stopSlider() {
+  clearInterval(intervalId);
+}
+
+$(".slide-navigation__txt span").on("click", function () {
+  var _this = $(this);
+  var order = _this.data("order");
+  var spans = $(".slide-navigation__txt span");
+  var current = $(".active").data("order");
+
+  spans.removeClass("active");
+  _this.addClass("active");
+  activate_slide(order);
+  stagger_squares(order, current);
+  stopSlider(); // Stop the timer on user interaction
+});
+
+$(document).ready(function () {
+  startSlider(); // Start the timer on page load
+});
+
+// Let's define the required varibles such as the number of particles to be created and an array to hold the particles
+const particleContainer = document.getElementById("particles");
+const Nparticles = 100;
+let particles = [];
+
+// function to return a random number from a given min and max
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+// This constructor will generate the required information for each particle and it's html structure to be added to the document
+function createParticle(i) {
+  this.id = i;
+  this.width = rand(1, 20) + "px";
+  this.height = this.width;
+  this.x = rand(10, 90) + "%";
+  this.delay = rand(1, 60) + "s";
+  this.duration = rand(10, 60) + "s";
+  this.html =
+    '<span style=" width: ' +
+    this.width +
+    "; height: " +
+    this.height +
+    "; left: " +
+    this.x +
+    "; animation-delay: " +
+    this.duration +
+    "; animation-duration: " +
+    this.duration +
+    '; "></span>';
+}
+
+// Let's loop through till we reach the max number of particles and save them to the array and append them to the document
+while (particles.length <= Nparticles) {
+  let Particle = new createParticle(particles.length);
+  particles.push(Particle);
+  particleContainer.innerHTML += Particle.html;
+}
+
+// Hope you liked it and that has inspired you to create something awesome

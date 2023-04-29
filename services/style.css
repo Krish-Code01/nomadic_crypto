@@ -1,4 +1,10 @@
 body {
+  background: url("https://i.postimg.cc/Z5gDHyvP/Untitled-design-11.jpg")
+    no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
   font-family: "Uni Sans", sans-serif;
   font-weight: 500;
 }
@@ -188,7 +194,7 @@ main {
   height: 4px;
   left: 0;
   bottom: -8px;
-  background: #fff;
+  background: transparent;
   transition: 500ms all ease-in-out;
 }
 
@@ -230,11 +236,13 @@ a.cta:hover:before {
   width: 100vw;
   height: 100vh;
   position: relative;
+  box-shadow: 0 16px 18px rgb(0 0 0 / 0.2);
 }
 .container .one-half {
   position: absolute;
   width: 50vw;
   height: 100vh;
+
   overflow: hidden;
 }
 .container .one-half.left {
@@ -302,7 +310,6 @@ a.cta:hover:before {
 
 .block {
   padding: 50px;
-  /*padding top needed for navbar links */
   padding-top: 50px;
 }
 
@@ -513,6 +520,8 @@ img[alt="phone1"] {
   top: 0;
   left: 0;
   display: flex;
+  box-shadow: 0 10px 10px 10px rgb(0 0 0 / 0.2);
+
   align-items: center;
 }
 
@@ -577,7 +586,7 @@ img[alt="phone1"] {
   width: 75%;
   height: 85%;
   border-radius: 30px;
-  box-shadow: 0 28px 79px 0 rgba(10, 22, 31, 0.35);
+  box-shadow: 0 10px 10px 10px rgb(0 0 0 / 0.2);
   position: absolute;
   top: 50%;
   right: 0;
@@ -694,6 +703,7 @@ img[alt="phone1"] {
   overflow: hidden;
   position: relative;
   border-radius: 30px;
+
   background-color: black;
 }
 
@@ -885,6 +895,7 @@ img[alt="phone1"] {
   z-index: 2;
   width: 500px;
   left: 25%;
+
   transform: translateX(-45%);
   max-height: 500px;
   height: 100%;
@@ -899,6 +910,7 @@ img[alt="phone1"] {
   user-select: none;
   top: 50%;
   right: 0;
+
   transform: translateY(-50%) translateX(-130px);
   opacity: 0;
   transition: all 0.3s;
@@ -1195,6 +1207,7 @@ img[alt="phone1"] {
 
 img[alt="phone3"] {
   width: 80%;
+  box-shadow: 0 6px 20px 20px rgb(0 0 0 / 0.2);
 }
 
 #block4 img[alt="phone4"],
@@ -1213,6 +1226,7 @@ img[alt="phone3"] {
   background-attachment: scroll;
   background-position: center 25vh;
   z-index: 1;
+  box-shadow: 0 6px 20px 20px rgb(0 0 0 / 0.2);
 }
 
 #block5 {
@@ -1221,6 +1235,7 @@ img[alt="phone3"] {
   background-attachment: scroll;
   background-position: center 25vh;
   z-index: 1;
+  box-shadow: 0 6px 20px 20px rgb(0 0 0 / 0.2);
 }
 
 #block6 {
@@ -1243,6 +1258,7 @@ img[alt="phone3"] {
   background-attachment: scroll;
   background-position: center;
   margin-bottom: 20vh;
+  box-shadow: 0 10px 20px 10px rgb(0 0 0 / 0.2);
 }
 
 #block4,
@@ -1296,8 +1312,8 @@ img[alt="phone3"] {
   left: 0;
   content: "";
   width: 100%;
-  height: 20vh;
-  background: white;
+  height: 15vh;
+  background: transparent;
   transform: skewY(-3.5deg);
 }
 
@@ -1324,12 +1340,14 @@ img[alt="phone3"] {
   display: flex;
   align-items: flex-start;
   justify-content: space-around;
+
   flex-direction: wrap;
 }
 
 #block7 img {
   position: relative;
   max-width: 30%;
+  box-shadow: 0 10px 20px 10px rgb(0 0 0 / 0.2);
 }
 
 #block7 img:nth-of-type(1) {
